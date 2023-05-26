@@ -12,7 +12,7 @@ Feature: API testleri
     Then Yeni alinan id'nin DELETE istemiyle silindigi, status code'un 200 oldugu ve mesajin "success" oldugu dogrulanir
 
 
-
+@02
     #zafer
     #[API_US08] Ziyaretçi Listesi Api işlemleri test edilir
   Scenario: [TC_02->API_US_08] Bir yönetici olarak ziyaret amaci delete islemini dogrulamaliyim
@@ -67,7 +67,7 @@ Feature: API testleri
     Then ziyaretci listesi sorgusunun status code'unun 403 oldugu dogrulanir
     And Donen sorgunun message'inin "failed" oldugu dogrulanir
 
-  @US09_TC03
+
      #zafer
     #[API_US09] Ziyaretci Listesi işlemleri test edilir
   Scenario: [TC_03->API_US_09] Ziyaretci listesinden bir id secilir ve detaylar kontrol edilir

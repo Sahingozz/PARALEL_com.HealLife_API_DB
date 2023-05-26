@@ -28,6 +28,7 @@ import utilities.ConfigReader;
 
 
 import static io.restassured.RestAssured.*;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.*;
 
@@ -37,10 +38,20 @@ public class APIStepDefinition {
     JSONObject reqBodyJson;
     Response response;
     int basariliStatusCode = 200;
-
+    String basariliExpenseAddMessage ;
+    int basariliExpenseAddStatusCode;
+    String basarisizExpenseAddMessage ;
+    int basarisizExpenseAddStatusCode;
+    int yeniHarcamaKaydiId;
+    boolean eklenenYeniHarcamaIdListedeMi;
 
     //------zafer
+
     private int denemeVisitorPurposeAddid;
+    boolean eklenenVisitorsPurposeIdListedeMi;
+
+    int visitorsPurposeDeleteStatusCode;
+    String visitorsPurposeDeleteMessage;
     int silinecekVisitorPurposeId;
     int visitorsPurposedeletedId;
     boolean silinenListedeMi;
@@ -263,6 +274,158 @@ public class APIStepDefinition {
                 .statusCode(int1);
         response.prettyPrint();
     }
+    //------------US_021_-----------------------------------
+
+    @Given("{string} baglantisi uzerinden gecerli authorization bilgileri ve dogru datalarla post body gonderilir")
+    public void baglantisi_uzerinden_gecerli_authorization_bilgileri_ve_dogru_datalarla_post_body_gonderilir(String string) {
+        String endpoint = "https://www.heallifehospital.com/api/addExpenseHead";
+/*
+"exp_category": "stationary",
+            "description": "stationary expense",
+            "is_active": "yes",
+            "is_deleted": "no"
+ */
+        // JSON body oluşturma
+        String requestBody = "{\"exp_category\":\"stationary\"" +
+                ",\"description\":\"stationary expense\"" +
+                ",\"is_active\":\"yes\"" +
+                ",\"is_deleted\":\"no\"}";
+
+        // POST isteği gönderme
+        Response response = given()
+                .header("Authorization", "Bearer " + HooksAPI.token)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .post(endpoint);
+
+        // İsteğe verilen yanıtı alma
+        int statusCode = response.getStatusCode();
+        String responseBody = response.getBody().asString();
+
+        // Sonuçları yazdırma
+        System.out.println("Status code: " + statusCode);
+
+        // eklenen kaydin Id no'sunu atama
+        yeniHarcamaKaydiId =response.jsonPath().getInt("addId");
+        System.out.println("yeni kayıt id : " + yeniHarcamaKaydiId);
+
+        JSONObject responseJson = new JSONObject(responseBody);
+        basariliExpenseAddStatusCode = response.getStatusCode();
+        basariliExpenseAddMessage = response.jsonPath().getString("message");
+        System.out.println("basariliExpenseAddStatusCode = " + basariliExpenseAddStatusCode);
+
+
+    }
+
+    @Then("Gonderilen post isleminin donusunde status code'un {int} oldugu dogrulanir")
+    public void gonderilen_post_isleminin_donusunde_status_code_un_oldugu_dogrulanir(Integer int1) {
+
+        Assert.assertEquals(200,basariliExpenseAddStatusCode);
+    }
+    @Then("Gonderilen post isleminin donusunda mesajin {string} oldugu dogrulanir")
+    public void gonderilen_post_isleminin_donusunda_mesajin_oldugu_dogrulanir(String string) {
+        Assert.assertEquals("Success",basariliExpenseAddMessage);
+
+    }
+
+    @Given("{string} baglantisi uzerinden gecersiz authorization bilgileri ve dogru datalarla post body gonderilir")
+    public void baglantisi_uzerinden_gecersiz_authorization_bilgileri_ve_dogru_datalarla_post_body_gonderilir(String string) {
+
+        String endpoint = "https://www.heallifehospital.com/api/addExpenseHead";
+        String hataliAuthCode ="ABC12345";
+/*
+"exp_category": "stationary",
+            "description": "stationary expense",
+            "is_active": "yes",
+            "is_deleted": "no"
+ */
+        // JSON body oluşturma
+        String requestBody = "{\"exp_category\":\"stationary\"" +
+                ",\"description\":\"stationary expense\"" +
+                ",\"is_active\":\"yes\"" +
+                ",\"is_deleted\":\"no\"}";
+
+        // POST isteği gönderme
+        Response response01 = given()
+                .header("Authorization", "Bearer " + hataliAuthCode)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .post(endpoint);
+
+        // İsteğe verilen yanıtı alma
+        int statusCode = response01.getStatusCode();
+        String responseBody = response01.getBody().asString();
+
+        // Sonuçları yazdırma
+        System.out.println("Status code: " + statusCode);
+
+
+        JSONObject responseJson = new JSONObject(responseBody);
+        basarisizExpenseAddStatusCode = response01.getStatusCode();
+        basarisizExpenseAddMessage = response01.jsonPath().getString("message");
+        System.out.println("basarisizExpenseAddStatusCode = " + basarisizExpenseAddStatusCode);
+
+
+    }
+    @Then("Gonderilen post isleminin neticesinde status code'un {int} oldugu dogrulanir")
+    public void gonderilen_post_isleminin_neticesinde_status_code_un_oldugu_dogrulanir(Integer int1) {
+        Assert.assertEquals(403,basarisizExpenseAddStatusCode);
+        System.out.println("sonraki ilk class'tan  :"+yeniHarcamaKaydiId);
+    }
+    @Then("Gonderilen post isleminin neticesinde mesajin {string} oldugu dogrulanir")
+    public void gonderilen_post_isleminin_neticesinde_mesajin_oldugu_dogrulanir(String string) {
+        Assert.assertEquals("failed",basarisizExpenseAddMessage);
+    }
+    @Given("Yeni olusturulan harcama kaydinin API'de bulundugu dogrulanmali")
+    public void yeni_olusturulan_harcama_kaydinin_api_de_bulundugu_dogrulanmali() {
+        String endpoint = "https://www.heallifehospital.com/api/addExpenseHead";
+        // JSON body oluşturma
+        String requestBody = "{\"exp_category\":\"stationary\"" +
+                ",\"description\":\"stationary expense\"" +
+                ",\"is_active\":\"yes\"" +
+                ",\"is_deleted\":\"no\"}";
+
+        // POST isteği gönderme
+        Response response = given()
+                .header("Authorization", "Bearer " + HooksAPI.token)
+                .contentType(ContentType.JSON)
+                .body(requestBody)
+                .post(endpoint);
+
+        // İsteğe verilen yanıtı alma
+        int statusCode = response.getStatusCode();
+        String responseBody = response.getBody().asString();
+
+        // Sonuçları yazdırma
+        System.out.println("Status code: " + statusCode);
+
+        // eklenen kaydin Id no'sunu atama
+        yeniHarcamaKaydiId =response.jsonPath().getInt("addId");
+        System.out.println("yeni kayıt id : " + yeniHarcamaKaydiId);
+            endpoint = "https://www.heallifehospital.com/api/getExpenseHead";
+
+        // GET isteği gönderme
+                response = given()
+                .header("Authorization", "Bearer " + HooksAPI.token)
+                .contentType(ContentType.JSON)
+                .get(endpoint);
+
+        // İsteğe verilen yanıtı alma
+        int statusCode1 = response.getStatusCode();
+        String responseBody1 = response.getBody().asString();
+
+        // Sonuçları yazdırma
+        System.out.println("Status code: " + statusCode1);
+        System.out.println("Response body: " + responseBody1);
+
+        // Yeni kaydın ID'sinin harcama listeleri içinde yer alıp almadığını kontrol etme
+        eklenenYeniHarcamaIdListedeMi = response.jsonPath().getString("lists.id").contains(String.valueOf(yeniHarcamaKaydiId));
+        System.out.println("Yeni kayıt listede mi?: " + eklenenYeniHarcamaIdListedeMi);
+        Assert.assertTrue(eklenenYeniHarcamaIdListedeMi);
+    }
+
+
+
 
     //-------------------ZAFER----------------------------------------------------------------
 
@@ -297,16 +460,44 @@ public class APIStepDefinition {
 
     @Then("Yeni eklenen visitorsPurpose id'nin sistemde bulundugu dogrulanir")
     public void yeni_eklenen_visitors_purpose_id_nin_sistemde_bulundugu_dogrulanir() {
+        String url = "https://www.heallifehospital.com/api/visitorsPurposeList";
+        // VisitorsPurposeList API sorgusu yapalim
+        Response listResponse = given()
+                .header("Authorization", "Bearer " + HooksAPI.token)
+                .get("https://www.heallifehospital.com/api/visitorsPurposeList");
 
-        Assert.assertTrue(denemeVisitorPurposeAddid != 0);
+// Yanıtı bir değişkene atayalim ve JSON olarak analiz edelim
+        String listResponseBody = listResponse.getBody().asString();
+        JSONObject listResponseJson = new JSONObject(listResponseBody);
+
+// "lists" bölümündeki nesnelerin kontrolü için for loop oluşturalım
+        JSONArray listsArray = listResponseJson.getJSONArray("lists");
+        silinenListedeMi = false;
+        for (int i = 0; i < listsArray.length(); i++) {
+            JSONObject listItem = listsArray.getJSONObject(i);
+            String listItemID = listItem.getString("id");
+
+            // silinen "id" değerini kontrol edelim
+            if (listItemID.equals(String.valueOf(denemeVisitorPurposeAddid))) {
+                eklenenVisitorsPurposeIdListedeMi = true;
+                break;
+            } else {
+                assertFalse("ekleme gerçeklememiş",eklenenVisitorsPurposeIdListedeMi);
+            }
+        }
+        Assert.assertTrue(eklenenVisitorsPurposeIdListedeMi);
 
     }
+
+
+
+
 
     @Then("Yeni alinan id'nin DELETE istemiyle silindigi, status code'un {int} oldugu ve mesajin {string} oldugu dogrulanir")
     public void yeni_alinan_id_nin_delete_istemiyle_silindigi_status_code_un_oldugu_ve_mesajin_oldugu_dogrulanir(Integer int1, String string) {
         String url = "https://www.heallifehospital.com/api/visitorsPurposeDelete";
 
-        Response response = RestAssured.given()
+        Response response = given()
                 .header("Authorization", HooksAPI.token)
                 .contentType(ContentType.JSON)
                 .body("{\"id\": \"" + denemeVisitorPurposeAddid + "\"}")
@@ -317,10 +508,11 @@ public class APIStepDefinition {
                 .statusCode(200)
                 .body("message", equalTo("Success"));
 
+        /*
         String urlList = "https://www.heallifehospital.com/api/visitorsPurposeList";
         response = given().header("Authorization", HooksAPI.token)
                 .when().get(urlList);
-        response.prettyPrint();
+        response.prettyPrint(); */
     }
 
     @Given("{string} icin hatali authorization bilgileriyle DELETE sorgusu gonderilir")
@@ -340,25 +532,17 @@ public class APIStepDefinition {
         response.then().assertThat()
                 .statusCode(expStatusCode)
                 .body("message", equalTo(expMessage));
+int sonuc = response.getStatusCode();
+        visitorsPurposeDeleteStatusCode = response.getStatusCode();
+        visitorsPurposeDeleteMessage= response.jsonPath().getString("message");
+
     }
 
     @Then("hatali authorizationla yapilan isteğin mesajının failed, status code'unun {int} oldugu dogrulanir")
     public void hatali_authorizationla_yapilan_isteğin_mesajının_failed_status_code_unun_oldugu_dogrulanir(Integer int1) {
-        String url = "https://www.heallifehospital.com/api/visitorsPurposeDelete";
-        String hataliToken = "A123456";
-        int testId = 107;
 
-        String expMessage = "failed";
-        Response response = RestAssured.given()
-                .header("Authorization", hataliToken)
-                .contentType(ContentType.JSON)
-                .body("{\"id\": \"" + testId + "\"}")
-                .when()
-                .delete(url);
-
-        response.then().assertThat()
-                .statusCode(int1)
-                .body("message", equalTo(expMessage));
+        Assert.assertEquals("failed",visitorsPurposeDeleteMessage);
+        Assert.assertEquals(403,visitorsPurposeDeleteStatusCode);
     }
 
     @Given("{string} ile ziyaret amaci listeden silinir")
