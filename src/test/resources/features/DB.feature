@@ -1,3 +1,4 @@
+@db
 Feature: DB_Testing
 
   Scenario Outline: Email query of the user whose first_name and last_name are given

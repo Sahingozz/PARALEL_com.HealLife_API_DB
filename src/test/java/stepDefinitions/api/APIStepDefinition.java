@@ -27,6 +27,10 @@ import utilities.API_Utils;
 import utilities.ConfigReader;
 
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
@@ -44,6 +48,9 @@ public class APIStepDefinition {
     int basarisizExpenseAddStatusCode;
     int yeniHarcamaKaydiId;
     boolean eklenenYeniHarcamaIdListedeMi;
+
+    int basariliPurposeUpdateStatusCode;
+    String basariliPurposeUpdateMessage;
 
     //------zafer
 
@@ -89,7 +96,9 @@ public class APIStepDefinition {
 
         System.out.println("tempPath = " + tempPath);
 
+
         fullPath = tempPath.toString(); // /{pp0}/{pp1}/{pp2}
+
 
     }
 
@@ -119,7 +128,7 @@ public class APIStepDefinition {
               "description":"deneme description"
     `   }
          */
-
+        System.out.println("fullPath = " + fullPath);
         reqBodyJson = new JSONObject();
 
         reqBodyJson.put("visitors_purpose", visitors_purpose);
@@ -201,6 +210,25 @@ public class APIStepDefinition {
 
     //---------------------EXTRA_USER STORY
 
+    @Given("{string} icin {int} nolu id GET sorgusu gonderilir")
+    public void icin_nolu_id_get_sorgusu_gonderilir(String url, Integer int1) {
+        url ="https://www.heallifehospital.com/api/opdList";
+
+        Response response = given()
+                .header("Authorization", "Bearer " + HooksAPI.token)
+                .contentType(ContentType.JSON)
+                .body("{\"id\": \"" + int1 + "\"}")
+                .get(url);
+       response.prettyPrint();
+
+
+
+    }
+    @Then("gelen bilgilerle beklenen bilgiler uyumlu oldugu dogrulanir")
+    public void gelen_bilgilerle_beklenen_bilgiler_uyumlu_oldugu_dogrulanir() {
+
+
+    }
     @Given("{string} icin GET sorgusu gonderilir")
     public void icin_get_sorgusu_gonderilir(String url) {
         url = "https://www.heallifehospital.com/api/visitorsPurposeList";
@@ -274,6 +302,48 @@ public class APIStepDefinition {
                 .statusCode(int1);
         response.prettyPrint();
     }
+
+    //-----------US_07--------------------------------------
+    @Then("{string} baglantisi uzerinden gecerli authorization bilgileri ve dogru datalarla PATCH body gonderilir")
+    public void baglantisi_uzerinden_gecerli_authorization_bilgileri_ve_dogru_datalarla_patch_body_gonderilir(String string) {
+        String url = "https://www.heallifehospital.com/api/visitorsPurposeUpdate";
+        System.out.println("fullPath: " + fullPath);
+        // Create a JSONObject for the request body
+        JSONObject reqBody = new JSONObject();
+        reqBody.put("id", 14);
+        reqBody.put("visitors_purpose", "visit99");
+        reqBody.put("description", "visit99");
+
+        // Send PATCH request and get the response
+        Response response = given()
+                .header("Authorization", HooksAPI.token)
+                .contentType(ContentType.JSON)
+                .body(reqBody.toString())
+                .when()
+                .patch(fullPath);
+
+        // Assert the status code is 200
+      //  response.then().statusCode(200);
+
+        // Assert the response body contains "Success" message
+      // response.then().body("message", Matchers.equalTo("Success"));
+
+        // Print the response body
+        response.prettyPrint();
+        basariliPurposeUpdateStatusCode = response.getStatusCode();
+        basariliPurposeUpdateMessage = response.jsonPath().getString("message");
+    }
+    @Then("Gonderilen patch isleminin donusunde status code'un {int} oldugu dogrulanir")
+    public void gonderilen_patch_isleminin_donusunde_status_code_un_oldugu_dogrulanir(Integer int1) {
+        Assert.assertEquals(200,basariliPurposeUpdateStatusCode);
+    }
+    @Then("Gonderilen patch isleminin donusunda mesajin {string} oldugu dogrulanir")
+    public void gonderilen_patch_isleminin_donusunda_mesajin_oldugu_dogrulanir(String string) {
+        Assert.assertEquals("Success",basariliPurposeUpdateMessage);
+    }
+
+
+
     //------------US_021_-----------------------------------
 
     @Given("{string} baglantisi uzerinden gecerli authorization bilgileri ve dogru datalarla post body gonderilir")
