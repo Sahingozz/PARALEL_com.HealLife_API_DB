@@ -20,7 +20,9 @@ public class DB_Utils {
 
         try {
             connection = DriverManager.getConnection(url, username, password);
+            System.out.println("Database bağlantısı kuruldu");
         } catch (SQLException e) {
+            System.out.println("Database bağlantısı GERÇEKLEŞTİRİLEMEDİ !!! ");
             throw new RuntimeException(e);
         }
 

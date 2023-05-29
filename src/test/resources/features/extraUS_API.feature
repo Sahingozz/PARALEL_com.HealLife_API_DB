@@ -22,3 +22,13 @@ Feature: API testleri
 
     Given "api/VisitorsPurposeList" icin hatali authorization bilgileriyle GET sorgusu gonderilir
     Then hatali authorization koduyla yapilan istek sonrasi donen status code'unun 403 oldugu dogrulanir
+
+  @US01_TC03
+    #zafer
+    #[API_US01] OPD List işlemleri test edilir
+  Scenario: [TC_02->API_US_04] Bir yönetici olarak API baglantisi üzerinden OPD List'e erisebilmeliyim.
+  Response body icindeki lists icerigi (id:"1" olan icerigin patient_name: "John Smith"
+  ve id:"23" olan icerigin patient_id: "16" oldugu)  dogrulanmali.
+
+    Given "api/opdList" icin 1 nolu id GET sorgusu gonderilir
+    Then gelen bilgilerle beklenen bilgiler uyumlu oldugu dogrulanir
