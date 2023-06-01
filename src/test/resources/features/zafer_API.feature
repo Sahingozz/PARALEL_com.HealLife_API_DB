@@ -12,7 +12,7 @@ Feature: API testleri
     Then Yeni alinan id'nin DELETE istemiyle silindigi, status code'un 200 oldugu ve mesajin "success" oldugu dogrulanir
 
 
-@02
+
     #zafer
     #[API_US08] Ziyaretçi Listesi Api işlemleri test edilir
   Scenario: [TC_02->API_US_08] Bir yönetici olarak ziyaret amaci delete islemini dogrulamaliyim
